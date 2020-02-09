@@ -33,7 +33,7 @@ type (
 		labelMappingsLocal  string
 		dryRun              bool
 		repo                repositoryService
-		labels              mappings
+		mappings            mappings
 	}
 )
 
@@ -45,7 +45,7 @@ func validateConfig(conf Config) error {
 		return errors.New("empty token")
 	}
 	if conf.LabelMappingsLocal == "" && conf.LabelMappingsGithub == "" {
-		return errors.New("empty label mapping path")
+		return errors.New("empty label mappings path")
 	}
 	return nil
 }
@@ -66,11 +66,11 @@ func newGitHubClient(token string) *github.Client {
 
 func New(conf Config) (*Labeler, error) {
 	if err := validateConfig(conf); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error on config validation: %v", err)
 	}
 	owner, name, err := extractOwnerName(conf.RepoSlug)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error extracting repository owner/name: %v", err)
 	}
 
 	r := repository{
@@ -101,9 +101,9 @@ func (l *Labeler) ApplyLabels() error {
 
 func (l *Labeler) initLabels() (err error) {
 	if l.labelMappingsLocal != "" {
-		l.labels, err = newMappingsFromFile(l.labelMappingsLocal)
+		l.mappings, err = newMappingsFromFile(l.labelMappingsLocal)
 	} else {
-		l.labels, err = newMappingsFromGitHub(l.repo, l.labelMappingsGithub)
+		l.mappings, err = newMappingsFromGitHub(l.repo, l.labelMappingsGithub)
 	}
 	return err
 }
@@ -114,10 +114,10 @@ func (l *Labeler) applyLabels(pulls []*github.PullRequest) error {
 		if err != nil {
 			return err
 		}
-		if ok := shouldApplyLabels(expected, pr.Labels); !ok {
+		if !shouldApplyLabels(expected, pr.Labels) {
 			continue
 		}
-		log.Printf("PR %s/%s#%d should have following mappings: %v (%s)", l.repo.owner(), l.repo.name(), *pr.Number, expected, *pr.Title)
+		log.Infof("PR %s/%s#%d should have following labels: %v (%s)", l.repo.owner(), l.repo.name(), *pr.Number, expected, *pr.Title)
 		if l.dryRun {
 			continue
 		}
@@ -133,7 +133,7 @@ func (l *Labeler) expectedLabels(pr *github.PullRequest) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	return l.labels.matchedLabels(files), nil
+	return l.mappings.matchedLabels(files), nil
 }
 
 func shouldApplyLabels(expected []string, existing []*github.Label) bool {

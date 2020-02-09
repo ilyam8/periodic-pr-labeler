@@ -12,8 +12,8 @@ import (
 type options struct {
 	RepoSlug           string `short:"r" long:"repository" description:"github repository slug"`
 	Token              string `short:"t" long:"token" description:"github token"`
-	LabelMappings      string `short:"m" long:"label-mapping" description:"label mappings file on github"`
-	LocalLabelMappings string `short:"M" long:"local-label-mapping" description:"label mappings file on local system"`
+	LabelMappings      string `short:"m" long:"label-mappings" description:"label mappings file on github"`
+	LocalLabelMappings string `short:"M" long:"label-mappings-local" description:"label mappings file on the local system"`
 	DryRun             bool   `short:"d" long:"dry-run" description:"dry run, labels won't be applied, only reported"`
 }
 
@@ -62,10 +62,10 @@ func main() {
 
 	labeler, err := labeling.New(conf)
 	if err != nil {
-		log.Fatalf("error on creating labeler: %v", err)
+		log.Fatal(err)
 	}
 
 	if err := labeler.ApplyLabels(); err != nil {
-		log.Fatalf("error on applying labels: %v", err)
+		log.Fatal(err)
 	}
 }

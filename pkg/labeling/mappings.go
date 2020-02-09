@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"reflect"
 
 	"github.com/gobwas/glob"
 	"github.com/google/go-github/v29/github"
@@ -61,19 +62,27 @@ func newMappingsFromFile(filePath string) (mappings, error) {
 }
 
 func newMappings(data []byte) (mappings, error) {
-	var userMappings map[string][]string
+	var userMappings map[string]interface{}
 	if err := yaml.Unmarshal(data, &userMappings); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("label mappings unmarshaling: %v", err)
 	}
-	if err := validateUserMappings(userMappings); err != nil {
-		return nil, err
+	if len(userMappings) == 0 {
+		return nil, errors.New("empty label mappings")
 	}
 
 	ls := make(mappings, len(userMappings))
-	for name, values := range userMappings {
+	for name, value := range userMappings {
+		values, err := mappingToSlice(value)
+		if err != nil {
+			return nil, fmt.Errorf("mapping label '%s': %v", name, err)
+		}
+		if len(values) == 0 {
+			return nil, fmt.Errorf("mapping label '%s' has no pattern(s)", name)
+		}
+
 		patterns, err := newPatterns(values)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("mapping label '%s': %v", name, err)
 		}
 		ls = append(ls, label{name: name, patterns: patterns})
 	}
@@ -92,18 +101,42 @@ func newPatterns(values []string) ([]glob.Glob, error) {
 	return patterns, nil
 }
 
-func validateUserMappings(mappings map[string][]string) error {
-	if len(mappings) == 0 {
-		return errors.New("empty mappings mapping")
+func mappingToSlice(i interface{}) ([]string, error) {
+	val := reflect.Indirect(reflect.ValueOf(i))
+	var rv []string
+	err := mappingValueToSlice(val, &rv)
+	return rv, err
+}
+
+func mappingValueToSlice(value reflect.Value, slice *[]string) error {
+	if !value.IsValid() {
+		return errors.New("invalid mapping value")
 	}
-	for name, values := range mappings {
-		if len(values) == 0 {
-			return fmt.Errorf("label '%s' has no patterns", name)
-		}
-		for i, v := range values {
-			if v == "" {
-				return fmt.Errorf("label '%s' pattern %d is empty", name, i+1)
-			}
+	switch value.Kind() {
+	case reflect.String:
+		return convertString(slice, value)
+	case reflect.Interface:
+		return convertInterface(slice, value)
+	case reflect.Slice:
+		return convertSlice(slice, value)
+	default:
+		return fmt.Errorf("unsupported mapping value type: %v", value.Kind())
+	}
+}
+
+func convertString(rv *[]string, value reflect.Value) error {
+	*rv = append(*rv, value.String())
+	return nil
+}
+
+func convertInterface(rv *[]string, value reflect.Value) error {
+	return mappingValueToSlice(reflect.ValueOf(value.Interface()), rv)
+}
+
+func convertSlice(rv *[]string, value reflect.Value) error {
+	for i := 0; i < value.Len(); i++ {
+		if err := mappingValueToSlice(value.Index(i), rv); err != nil {
+			return err
 		}
 	}
 	return nil
