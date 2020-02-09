@@ -8,7 +8,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-func parse(conf []byte) (*Mappings, error) {
+func Parse(conf []byte) (*Mappings, error) {
 	var userMappings map[string]interface{}
 	if err := yaml.Unmarshal(conf, &userMappings); err != nil {
 		return nil, fmt.Errorf("label mappings unmarshaling: %v", err)

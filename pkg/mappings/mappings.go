@@ -28,7 +28,7 @@ func FromFile(filepath string) (*Mappings, error) {
 	if err != nil {
 		return nil, err
 	}
-	return parse(b)
+	return Parse(b)
 }
 
 func FromGitHub(filepath string, r Repository) (*Mappings, error) {
@@ -37,7 +37,7 @@ func FromGitHub(filepath string, r Repository) (*Mappings, error) {
 		return nil, err
 	}
 	c, err := content.GetContent()
-	return parse([]byte(c))
+	return Parse([]byte(c))
 }
 
 func (ms Mappings) MatchedLabels(files []*github.CommitFile) (labels []string) {
