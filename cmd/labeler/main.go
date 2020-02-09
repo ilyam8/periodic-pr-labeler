@@ -4,6 +4,8 @@ import (
 	"os"
 
 	"github.com/ilyam8/periodic-pr-labeler/pkg/labeling"
+	"github.com/ilyam8/periodic-pr-labeler/pkg/mappings"
+	"github.com/ilyam8/periodic-pr-labeler/pkg/repository"
 
 	"github.com/jessevdk/go-flags"
 	log "github.com/sirupsen/logrus"
@@ -39,9 +41,27 @@ func applyFromEnv(opts *options) {
 	if token, ok := os.LookupEnv("GITHUB_TOKEN"); ok && opts.Token == "" {
 		opts.Token = token
 	}
-	if mappings, ok := os.LookupEnv("LABEL_MAPPINGS_FILE"); ok && opts.LabelMappings == "" {
-		opts.LabelMappings = mappings
+	if labelMappings, ok := os.LookupEnv("LABEL_MAPPINGS_FILE"); ok && opts.LabelMappings == "" {
+		opts.LabelMappings = labelMappings
 	}
+}
+
+func newRepositoryService(opts options) *repository.Repository {
+	conf := repository.Config{}
+	return repository.New(conf)
+}
+
+func newMappingsService(opts options, repo *repository.Repository) (ms *mappings.Mappings) {
+	var err error
+	if opts.LocalLabelMappings != "" {
+		ms, err = mappings.FromFile(opts.LocalLabelMappings)
+	} else {
+		ms, err = mappings.FromGitHub(opts.LocalLabelMappings, repo)
+	}
+	if err != nil {
+		log.Fatal(err)
+	}
+	return ms
 }
 
 func main() {
@@ -52,20 +72,11 @@ func main() {
 		log.SetLevel(log.DebugLevel)
 	}
 
-	conf := labeling.Config{
-		RepoSlug:            opts.RepoSlug,
-		Token:               opts.Token,
-		LabelMappingsGithub: opts.LabelMappings,
-		LabelMappingsLocal:  opts.LocalLabelMappings,
-		DryRun:              opts.DryRun,
-	}
+	repoSvc := newRepositoryService(opts)
+	mapSvc := newMappingsService(opts, repoSvc)
+	labSvc := labeling.New(repoSvc, mapSvc)
 
-	labeler, err := labeling.New(conf)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	if err := labeler.ApplyLabels(); err != nil {
+	if err := labSvc.ApplyLabels(); err != nil {
 		log.Fatal(err)
 	}
 }
