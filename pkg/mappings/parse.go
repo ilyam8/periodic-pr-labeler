@@ -3,50 +3,14 @@ package mappings
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"reflect"
 
-	"github.com/gobwas/glob"
-	"github.com/google/go-github/v29/github"
 	"gopkg.in/yaml.v2"
 )
 
-type Repository interface {
-	FileContent(filePath string) (*github.RepositoryContent, error)
-}
-
-func FromFile(filepath string) (*Mappings, error) {
-	b, err := ioutil.ReadFile(filepath)
-	if err != nil {
-		return nil, err
-	}
-	return newMappings(b)
-}
-
-func FromGitHub(filepath string, r Repository) (*Mappings, error) {
-	content, err := r.FileContent(filepath)
-	if err != nil {
-		return nil, err
-	}
-	c, err := content.GetContent()
-	return newMappings([]byte(c))
-}
-
-func newPatterns(values []string) ([]glob.Glob, error) {
-	var patterns []glob.Glob
-	for _, v := range values {
-		p, err := glob.Compile(v, '/')
-		if err != nil {
-			return nil, err
-		}
-		patterns = append(patterns, p)
-	}
-	return patterns, nil
-}
-
-func newMappings(data []byte) (*Mappings, error) {
+func parse(conf []byte) (*Mappings, error) {
 	var userMappings map[string]interface{}
-	if err := yaml.Unmarshal(data, &userMappings); err != nil {
+	if err := yaml.Unmarshal(conf, &userMappings); err != nil {
 		return nil, fmt.Errorf("label mappings unmarshaling: %v", err)
 	}
 	if len(userMappings) == 0 {
@@ -55,21 +19,29 @@ func newMappings(data []byte) (*Mappings, error) {
 
 	var mappings Mappings
 	for name, value := range userMappings {
-		values, err := mappingToSlice(value)
+		l, err := parseLabel(name, value)
 		if err != nil {
-			return nil, fmt.Errorf("mapping label '%s': %v", name, err)
+			return nil, err
 		}
-		if len(values) == 0 {
-			return nil, fmt.Errorf("mapping label '%s' has no pattern(s)", name)
-		}
-
-		patterns, err := newPatterns(values)
-		if err != nil {
-			return nil, fmt.Errorf("mapping label '%s': %v", name, err)
-		}
-		mappings.labels = append(mappings.labels, Label{name: name, patterns: patterns})
+		mappings.labels = append(mappings.labels, l)
 	}
 	return &mappings, nil
+}
+
+func parseLabel(name string, value interface{}) (*label, error) {
+	values, err := mappingToSlice(value)
+	if err != nil {
+		return nil, fmt.Errorf("mapping label '%s': %v", name, err)
+	}
+	if len(values) == 0 {
+		return nil, fmt.Errorf("mapping label '%s' has no pattern(s)", name)
+	}
+
+	m, err := newGlobOrMatcher(values)
+	if err != nil {
+		return nil, fmt.Errorf("mapping label '%s': %v", name, err)
+	}
+	return &label{name: name, matcher: m}, nil
 }
 
 func mappingToSlice(mapping interface{}) ([]string, error) {

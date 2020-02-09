@@ -1,38 +1,54 @@
 package mappings
 
 import (
-	"github.com/gobwas/glob"
+	"io/ioutil"
+
 	"github.com/google/go-github/v29/github"
 )
 
 type (
-	Label struct {
-		name     string
-		patterns []glob.Glob
+	matcher interface {
+		Match(string) bool
+	}
+	label struct {
+		name string
+		matcher
 	}
 	Mappings struct {
-		labels []Label
+		labels []*label
 	}
 )
+
+type Repository interface {
+	FileContent(filePath string) (*github.RepositoryContent, error)
+}
+
+func FromFile(filepath string) (*Mappings, error) {
+	b, err := ioutil.ReadFile(filepath)
+	if err != nil {
+		return nil, err
+	}
+	return parse(b)
+}
+
+func FromGitHub(filepath string, r Repository) (*Mappings, error) {
+	content, err := r.FileContent(filepath)
+	if err != nil {
+		return nil, err
+	}
+	c, err := content.GetContent()
+	return parse([]byte(c))
+}
 
 func (ms Mappings) MatchedLabels(files []*github.CommitFile) (labels []string) {
 	set := make(map[string]bool)
 	for _, file := range files {
-		for _, label := range ms.labels {
-			if !set[label.name] && label.match(*file.Filename) {
-				set[label.name] = true
-				labels = append(labels, label.name)
+		for _, l := range ms.labels {
+			if !set[l.name] && l.Match(*file.Filename) {
+				set[l.name] = true
+				labels = append(labels, l.name)
 			}
 		}
 	}
 	return labels
-}
-
-func (l Label) match(name string) bool {
-	for _, m := range l.patterns {
-		if m.Match(name) {
-			return true
-		}
-	}
-	return false
 }
