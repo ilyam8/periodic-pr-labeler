@@ -7,8 +7,8 @@ import (
 
 type Repository interface {
 	OpenPullRequests() ([]*github.PullRequest, error)
-	PullRequestModifiedFiles(prNum int) ([]*github.CommitFile, error)
-	AddLabelsToPullRequest(prNum int, labels []string) error
+	PullRequestModifiedFiles(number int) ([]*github.CommitFile, error)
+	AddLabelsToPullRequest(number int, labels []string) error
 	Owner() string
 	Name() string
 }
@@ -73,18 +73,19 @@ func shouldApplyLabels(expected []string, existing []*github.Label) bool {
 	case len(expected) > len(existing):
 		return true
 	}
-	return hasDifference(expected, existing)
+	return len(difference(expected, existing)) == 0
 }
 
-func hasDifference(expected []string, existing []*github.Label) bool {
+func difference(expected []string, existing []*github.Label) []string {
 	existingSet := make(map[string]struct{}, len(existing))
 	for _, v := range existing {
 		existingSet[*v.Name] = struct{}{}
 	}
+	var diff []string
 	for _, v := range expected {
 		if _, ok := existingSet[v]; !ok {
-			return true
+			diff = append(diff, v)
 		}
 	}
-	return false
+	return diff
 }

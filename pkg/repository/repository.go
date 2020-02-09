@@ -42,10 +42,10 @@ func (r Repository) Name() string {
 	return r.name
 }
 
-func (r Repository) FileContent(filePath string) (*github.RepositoryContent, error) {
-	content, _, _, err := r.Repositories.GetContents(context.TODO(), r.Owner(), r.Name(), filePath, nil)
+func (r Repository) FileContent(filepath string) (*github.RepositoryContent, error) {
+	content, _, _, err := r.Repositories.GetContents(context.TODO(), r.Owner(), r.Name(), filepath, nil)
 	if content == nil && err == nil {
-		err = fmt.Errorf("'%s' is not a file", filePath)
+		err = fmt.Errorf("'%s' is not a file", filepath)
 	}
 	return content, err
 }
@@ -63,12 +63,12 @@ func (r Repository) OpenPullRequests() ([]*github.PullRequest, error) {
 	}
 }
 
-func (r Repository) PullRequestModifiedFiles(prNum int) ([]*github.CommitFile, error) {
-	files, _, err := r.PullRequests.ListFiles(context.Background(), r.Owner(), r.Name(), prNum, nil)
+func (r Repository) PullRequestModifiedFiles(number int) ([]*github.CommitFile, error) {
+	files, _, err := r.PullRequests.ListFiles(context.Background(), r.Owner(), r.Name(), number, nil)
 	return files, err
 }
 
-func (r Repository) AddLabelsToPullRequest(prNum int, labels []string) error {
-	_, _, err := r.Issues.AddLabelsToIssue(context.Background(), r.Owner(), r.Name(), prNum, labels)
+func (r Repository) AddLabelsToPullRequest(number int, labels []string) error {
+	_, _, err := r.Issues.AddLabelsToIssue(context.Background(), r.Owner(), r.Name(), number, labels)
 	return err
 }
