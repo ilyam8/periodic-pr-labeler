@@ -1,6 +1,8 @@
 package labeling
 
 import (
+	"errors"
+	"fmt"
 	"io/ioutil"
 
 	"github.com/gobwas/glob"
@@ -13,7 +15,7 @@ type (
 		name     string
 		patterns []glob.Glob
 	}
-	labels []label
+	mappings []label
 )
 
 func (l label) match(name string) bool {
@@ -25,20 +27,20 @@ func (l label) match(name string) bool {
 	return false
 }
 
-func (ls labels) matchedLabels(files []*github.CommitFile) (matched []string) {
+func (ms mappings) matchedLabels(files []*github.CommitFile) (labels []string) {
 	set := make(map[string]bool)
 	for _, file := range files {
-		for _, label := range ls {
+		for _, label := range ms {
 			if !set[label.name] && label.match(*file.Filename) {
 				set[label.name] = true
-				matched = append(matched, label.name)
+				labels = append(labels, label.name)
 			}
 		}
 	}
-	return matched
+	return labels
 }
 
-func newLabelsFromGitHub(r repositoryService, filePath string) (labels, error) {
+func newMappingsFromGitHub(r repositoryService, filePath string) (mappings, error) {
 	content, err := r.fileContent(filePath)
 	if err != nil {
 		return nil, err
@@ -47,25 +49,28 @@ func newLabelsFromGitHub(r repositoryService, filePath string) (labels, error) {
 	if err != nil {
 		return nil, err
 	}
-	return newLabelsFromConfig([]byte(c))
+	return newMappings([]byte(c))
 }
 
-func newLabelsFromFile(filePath string) (labels, error) {
+func newMappingsFromFile(filePath string) (mappings, error) {
 	b, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		return nil, err
 	}
-	return newLabelsFromConfig(b)
+	return newMappings(b)
 }
 
-func newLabelsFromConfig(from []byte) (labels, error) {
-	var config map[string][]string
-	if err := yaml.Unmarshal(from, &config); err != nil {
+func newMappings(data []byte) (mappings, error) {
+	var userMappings map[string][]string
+	if err := yaml.Unmarshal(data, &userMappings); err != nil {
+		return nil, err
+	}
+	if err := validateUserMappings(userMappings); err != nil {
 		return nil, err
 	}
 
-	ls := make(labels, len(config))
-	for name, values := range config {
+	ls := make(mappings, len(userMappings))
+	for name, values := range userMappings {
 		patterns, err := newPatterns(values)
 		if err != nil {
 			return nil, err
@@ -85,4 +90,21 @@ func newPatterns(values []string) ([]glob.Glob, error) {
 		patterns = append(patterns, p)
 	}
 	return patterns, nil
+}
+
+func validateUserMappings(mappings map[string][]string) error {
+	if len(mappings) == 0 {
+		return errors.New("empty mappings mapping")
+	}
+	for name, values := range mappings {
+		if len(values) == 0 {
+			return fmt.Errorf("label '%s' has no patterns", name)
+		}
+		for i, v := range values {
+			if v == "" {
+				return fmt.Errorf("label '%s' pattern %d is empty", name, i+1)
+			}
+		}
+	}
+	return nil
 }

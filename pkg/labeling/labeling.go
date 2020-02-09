@@ -4,10 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/google/go-github/v29/github"
+	log "github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
 )
 
@@ -33,7 +33,7 @@ type (
 		labelMappingsLocal  string
 		dryRun              bool
 		repo                repositoryService
-		labels              labels
+		labels              mappings
 	}
 )
 
@@ -101,9 +101,9 @@ func (l *Labeler) ApplyLabels() error {
 
 func (l *Labeler) initLabels() (err error) {
 	if l.labelMappingsLocal != "" {
-		l.labels, err = newLabelsFromFile(l.labelMappingsLocal)
+		l.labels, err = newMappingsFromFile(l.labelMappingsLocal)
 	} else {
-		l.labels, err = newLabelsFromGitHub(l.repo, l.labelMappingsGithub)
+		l.labels, err = newMappingsFromGitHub(l.repo, l.labelMappingsGithub)
 	}
 	return err
 }
@@ -115,9 +115,9 @@ func (l *Labeler) applyLabels(pulls []*github.PullRequest) error {
 			return err
 		}
 		if ok := shouldApplyLabels(expected, pr.Labels); !ok {
-			return nil
+			continue
 		}
-		log.Printf("PR %s/%s#%d should have following labels: %v (%s)", l.repo.owner(), l.repo.name(), *pr.Number, expected, *pr.Title)
+		log.Printf("PR %s/%s#%d should have following mappings: %v (%s)", l.repo.owner(), l.repo.name(), *pr.Number, expected, *pr.Title)
 		if l.dryRun {
 			continue
 		}
@@ -133,8 +133,7 @@ func (l *Labeler) expectedLabels(pr *github.PullRequest) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	expected := l.labels.matchedLabels(files)
-	return expected, nil
+	return l.labels.matchedLabels(files), nil
 }
 
 func shouldApplyLabels(expected []string, existing []*github.Label) bool {
@@ -148,14 +147,14 @@ func shouldApplyLabels(expected []string, existing []*github.Label) bool {
 }
 
 func hasDifference(expected []string, existing []*github.Label) bool {
-	set := make(map[string]struct{}, len(existing))
+	existingSet := make(map[string]struct{}, len(existing))
 	for _, v := range existing {
-		set[*v.Name] = struct{}{}
+		existingSet[*v.Name] = struct{}{}
 	}
 	for _, v := range expected {
-		if _, ok := set[v]; !ok {
-			return false
+		if _, ok := existingSet[v]; !ok {
+			return true
 		}
 	}
-	return true
+	return false
 }

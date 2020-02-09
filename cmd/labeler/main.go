@@ -1,13 +1,12 @@
 package main
 
 import (
-	"flag"
-	"log"
 	"os"
 
 	"github.com/ilyam8/periodic-pr-labeler/pkg/labeling"
 
 	"github.com/jessevdk/go-flags"
+	log "github.com/sirupsen/logrus"
 )
 
 type options struct {
@@ -25,10 +24,10 @@ func parseCLI() options {
 	parser.Usage = "[OPTION]..."
 
 	if _, err := parser.ParseArgs(os.Args); err != nil {
-		if err == flag.ErrHelp {
-			os.Exit(1)
+		if flagsErr, ok := err.(*flags.Error); ok && flagsErr.Type == flags.ErrHelp {
+			os.Exit(0)
 		}
-		os.Exit(0)
+		os.Exit(1)
 	}
 	return opt
 }
@@ -49,6 +48,10 @@ func main() {
 	opts := parseCLI()
 	applyFromEnv(&opts)
 
+	if opts.DryRun {
+		log.SetLevel(log.DebugLevel)
+	}
+
 	conf := labeling.Config{
 		RepoSlug:            opts.RepoSlug,
 		Token:               opts.Token,
@@ -59,10 +62,10 @@ func main() {
 
 	labeler, err := labeling.New(conf)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("error on creating labeler: %v", err)
 	}
 
 	if err := labeler.ApplyLabels(); err != nil {
-		log.Fatal(err)
+		log.Fatalf("error on applying labels: %v", err)
 	}
 }
