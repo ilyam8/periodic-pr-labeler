@@ -50,21 +50,21 @@ func (l Labeler) applyLabels(pulls []*github.PullRequest) error {
 
 		expected := l.MatchedLabels(files)
 		if len(expected) == 0 {
-			log.Debugf("[NO MATCH] PR %s'", l.fullName(pull))
+			log.WithField("labels", "no match").Debug(l.fullName(pull))
 			continue
 		}
 
 		if !shouldAddLabels(expected, pull.Labels) {
-			log.Debugf("[HAVE ALL] PR %s", l.fullName(pull))
+			log.WithField("labels", "have all").Debug(l.fullName(pull))
 			continue
 		}
 
-		log.Debugf("[SHOULD HAVE] PR %s, LABELS: %v", l.fullName(pull), expected)
+		log.WithFields(log.Fields{"labels": expected}).Debugf("%s [dry run]", l.fullName(pull))
 		if l.DryRun {
 			continue
 		}
 
-		log.Infof("[APPLYING] PR %s, LABELS: %v", l.fullName(pull), expected)
+		log.WithFields(log.Fields{"labels": expected}).Infof("%s [applying]", l.fullName(pull))
 		if err := l.AddLabelsToPullRequest(pull.GetNumber(), expected); err != nil {
 			return err
 		}
@@ -73,7 +73,7 @@ func (l Labeler) applyLabels(pulls []*github.PullRequest) error {
 }
 
 func (l Labeler) fullName(pull *github.PullRequest) string {
-	return fmt.Sprintf("%s/%s#%d '%s'", l.Owner(), l.Name(), pull.GetNumber(), pull.GetTitle())
+	return fmt.Sprintf("PR %s/%s#%d", l.Owner(), l.Name(), pull.GetNumber())
 }
 
 func shouldAddLabels(expected []string, existing []*github.Label) bool {
