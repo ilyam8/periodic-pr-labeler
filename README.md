@@ -32,7 +32,7 @@ This file uses the same schema as in https://github.com/actions/labeler
 
 This action uses [`gobwas/glob`](https://github.com/gobwas/glob) library for pattern matches.
 
-```
+```console
 pattern:
     { term }
 
@@ -63,7 +63,7 @@ To get better understanding see [examples](https://github.com/gobwas/glob#exampl
 
 See all available options:
 
-```
+```console
 Usage:
   labeler [OPTION]...
 
@@ -80,17 +80,17 @@ Help Options:
 
 ## Dry-run mode
 
-Labeler has `dry-run` mode. In this mode **it doesnt add labels**.
+Labeler has `dry-run` mode. In this mode **it doesnt add labels** any labels.
 
 Reported information:
 
 - `no match` means all changed files dont match any pattern.
-- `has all` means that pr already has all expected labels.
-- `list of labels` means that pr has no expected labels. List of labels to add.
+- `has all` means that pull request has all expected labels.
+- `list of labels` means that pull request has no expected labels. List of labels to add.
 
 Example output:
 
-```
+```console
 DEBU[0003] found 38 open pull requests
 DEBU[0003] PR netdata/netdata#6447                       labels="has all"
 DEBU[0004] PR netdata/netdata#6390                       labels="has all"
