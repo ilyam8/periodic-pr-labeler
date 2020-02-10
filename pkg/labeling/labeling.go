@@ -30,7 +30,7 @@ func New(r Repository, m Mappings) *Labeler {
 	}
 }
 
-func (l *Labeler) ApplyLabels() (err error) {
+func (l Labeler) ApplyLabels() (err error) {
 	pulls, err := l.OpenPullRequests()
 	if err != nil {
 		return err
@@ -38,18 +38,18 @@ func (l *Labeler) ApplyLabels() (err error) {
 	return l.applyLabels(pulls)
 }
 
-func (l *Labeler) applyLabels(pulls []*github.PullRequest) error {
+func (l Labeler) applyLabels(pulls []*github.PullRequest) error {
 	for _, pull := range pulls {
 		if pull.Number == nil {
 			continue
 		}
 
-		expected, err := l.expectedLabels(pull)
+		expected, err := l.expectedLabels(*pull.Number)
 		if err != nil {
 			return err
 		}
 
-		if !shouldApplyLabels(expected, pull.Labels) {
+		if !shouldAddLabels(expected, pull.Labels) {
 			continue
 		}
 
@@ -64,15 +64,15 @@ func (l *Labeler) applyLabels(pulls []*github.PullRequest) error {
 	return nil
 }
 
-func (l *Labeler) expectedLabels(pull *github.PullRequest) ([]string, error) {
-	files, err := l.PullRequestModifiedFiles(*pull.Number)
+func (l Labeler) expectedLabels(number int) ([]string, error) {
+	files, err := l.PullRequestModifiedFiles(number)
 	if err != nil {
 		return nil, err
 	}
 	return l.MatchedLabels(files), nil
 }
 
-func shouldApplyLabels(expected []string, existing []*github.Label) bool {
+func shouldAddLabels(expected []string, existing []*github.Label) bool {
 	switch {
 	case len(expected) == 0:
 		return false

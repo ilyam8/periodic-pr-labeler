@@ -10,6 +10,8 @@ import (
 
 const open = "open"
 
+func closePR(pr pullRequest) pullRequest { pr.state = ""; return pr }
+
 type pullRequest struct {
 	title string
 	state string
@@ -55,13 +57,13 @@ func TestNew(t *testing.T) {
 
 }
 
-type applyLabelsTestCase struct {
+type applyLabelsTest struct {
 	pr             pullRequest
 	expectedLabels []string
 }
 
 func TestLabeler_ApplyLabels(t *testing.T) {
-	tests := []applyLabelsTestCase{
+	tests := []applyLabelsTest{
 		{pr: prModifyAppsPlugin, expectedLabels: []string{"collectors"}},
 		{pr: prModifyPythonExample, expectedLabels: []string{"collectors", "python.d"}},
 		{pr: prModifyPythonApache, expectedLabels: []string{"collectors", "python.d", "python.d/apache"}},
@@ -70,18 +72,69 @@ func TestLabeler_ApplyLabels(t *testing.T) {
 		{pr: prClosedModifyBashTomcat},
 	}
 
-	labeler := prepareApplyLabelsLabeler(tests)
+	labeler, _ := prepareApplyLabelsLabeler(tests)
 
 	err := labeler.ApplyLabels()
 	require.NoError(t, err)
+	ensurePullRequestsHaveExpectedLabels(t, tests)
+}
 
+func TestLabeler_ApplyLabels_SuccessfulWhenZeroPullRequest(t *testing.T) {
+	labeler, _ := prepareApplyLabelsLabeler(nil)
+
+	assert.NoError(t, labeler.ApplyLabels())
+}
+
+func TestLabeler_ApplyLabels_SuccessfulWhenZeroOpenPullRequest(t *testing.T) {
+	tests := []applyLabelsTest{
+		{pr: closePR(prModifyAppsPlugin)},
+		{pr: closePR(prModifyPythonExample)},
+		{pr: closePR(prModifyPythonApache)},
+		{pr: closePR(prModifyBashExample)},
+		{pr: closePR(prModifyBashApache)},
+	}
+
+	labeler, _ := prepareApplyLabelsLabeler(tests)
+
+	assert.NoError(t, labeler.ApplyLabels())
+	ensurePullRequestsHaveExpectedLabels(t, tests)
+}
+
+func TestLabeler_ApplyLabels_ReturnsErrorIfOpenPullRequestsFails(t *testing.T) {
+	labeler, rs := prepareApplyLabelsLabeler(nil)
+	rs.errOnOpenPullRequests = true
+
+	assert.Error(t, labeler.ApplyLabels())
+}
+
+func TestLabeler_ApplyLabels_ReturnsErrorIfPullRequestModifiedFilesFails(t *testing.T) {
+	tests := []applyLabelsTest{
+		{pr: prModifyAppsPlugin},
+	}
+	labeler, rs := prepareApplyLabelsLabeler(tests)
+	rs.errOnPullRequestModifiedFiles = true
+
+	assert.Error(t, labeler.ApplyLabels())
+}
+
+func TestLabeler_ApplyLabels_ReturnsErrorIfAddLabelsToPullRequestFails(t *testing.T) {
+	tests := []applyLabelsTest{
+		{pr: prModifyAppsPlugin},
+	}
+	labeler, rs := prepareApplyLabelsLabeler(tests)
+	rs.errOnAddLabelsToPullRequest = true
+
+	assert.Error(t, labeler.ApplyLabels())
+}
+
+func ensurePullRequestsHaveExpectedLabels(t *testing.T, tests []applyLabelsTest) {
 	for _, test := range tests {
 		diff := difference(test.expectedLabels, test.pr.Labels)
 		assert.Zerof(t, diff, "PR#%d ('%s') has no following labels: %v", *test.pr.Number, *test.pr.Title, diff)
 	}
 }
 
-func prepareApplyLabelsLabeler(cases []applyLabelsTestCase) *Labeler {
+func prepareApplyLabelsLabeler(cases []applyLabelsTest) (*Labeler, *mockRepository) {
 	rs := prepareRepository()
 	ms := prepareMappings()
 
@@ -91,7 +144,7 @@ func prepareApplyLabelsLabeler(cases []applyLabelsTestCase) *Labeler {
 		cases[i].pr.PullRequest = pull
 		rs.addPullRequest(pull, files)
 	}
-	return New(rs, ms)
+	return New(rs, ms), rs
 }
 
 func convertPullRequest(pr pullRequest) (*github.PullRequest, []*github.CommitFile) {
