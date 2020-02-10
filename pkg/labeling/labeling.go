@@ -35,6 +35,7 @@ func (l Labeler) ApplyLabels() (err error) {
 	if err != nil {
 		return err
 	}
+	log.Debugf("found %d open pull requests", len(pulls))
 	return l.applyLabels(pulls)
 }
 
@@ -44,32 +45,33 @@ func (l Labeler) applyLabels(pulls []*github.PullRequest) error {
 			continue
 		}
 
-		expected, err := l.expectedLabels(*pull.Number)
+		files, err := l.PullRequestModifiedFiles(*pull.Number)
 		if err != nil {
 			return err
 		}
 
-		if !shouldAddLabels(expected, pull.Labels) {
+		expected := l.MatchedLabels(files)
+		if len(expected) == 0 {
+			log.Debugf("[NO MATCH] PR %s/%s#%d '%s'", l.Owner(), l.Name(), *pull.Number, safeString(pull.Title))
 			continue
 		}
 
-		log.Infof("PR %s/%s#%d should have following labels: %v (%s)", l.Owner(), l.Name(), *pull.Number, expected, safeString(pull.Title))
+		if !shouldAddLabels(expected, pull.Labels) {
+			log.Debugf("[HAVE ALL] PR %s/%s#%d '%s'", l.Owner(), l.Name(), *pull.Number, safeString(pull.Title))
+			continue
+		}
+
+		log.Debugf("[SHOULD HAVE] PR %s/%s#%d '%s', LABELS: %v", l.Owner(), l.Name(), *pull.Number, safeString(pull.Title), expected)
 		if l.DryRun {
 			continue
 		}
+
+		log.Infof("[APPLYING] PR %s/%s#%d '%s', LABELS:", l.Owner(), l.Name(), *pull.Number, safeString(pull.Title), expected)
 		if err := l.AddLabelsToPullRequest(*pull.Number, expected); err != nil {
 			return err
 		}
 	}
 	return nil
-}
-
-func (l Labeler) expectedLabels(number int) ([]string, error) {
-	files, err := l.PullRequestModifiedFiles(number)
-	if err != nil {
-		return nil, err
-	}
-	return l.MatchedLabels(files), nil
 }
 
 func shouldAddLabels(expected []string, existing []*github.Label) bool {
