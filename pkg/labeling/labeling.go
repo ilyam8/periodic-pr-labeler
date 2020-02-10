@@ -41,33 +41,29 @@ func (l Labeler) ApplyLabels() (err error) {
 
 func (l Labeler) applyLabels(pulls []*github.PullRequest) error {
 	for _, pull := range pulls {
-		if pull.Number == nil {
-			continue
-		}
-
-		files, err := l.PullRequestModifiedFiles(*pull.Number)
+		files, err := l.PullRequestModifiedFiles(pull.GetNumber())
 		if err != nil {
 			return err
 		}
 
 		expected := l.MatchedLabels(files)
 		if len(expected) == 0 {
-			log.Debugf("[NO MATCH] PR %s/%s#%d '%s'", l.Owner(), l.Name(), *pull.Number, safeString(pull.Title))
+			log.Debugf("[NO MATCH] PR %s/%s#%d '%s'", l.Owner(), l.Name(), pull.GetNumber(), pull.GetTitle())
 			continue
 		}
 
 		if !shouldAddLabels(expected, pull.Labels) {
-			log.Debugf("[HAVE ALL] PR %s/%s#%d '%s'", l.Owner(), l.Name(), *pull.Number, safeString(pull.Title))
+			log.Debugf("[HAVE ALL] PR %s/%s#%d '%s'", l.Owner(), l.Name(), pull.GetNumber(), pull.GetTitle())
 			continue
 		}
 
-		log.Debugf("[SHOULD HAVE] PR %s/%s#%d '%s', LABELS: %v", l.Owner(), l.Name(), *pull.Number, safeString(pull.Title), expected)
+		log.Debugf("[SHOULD HAVE] PR %s/%s#%d '%s', LABELS: %v", l.Owner(), l.Name(), pull.GetNumber(), pull.GetTitle(), expected)
 		if l.DryRun {
 			continue
 		}
 
-		log.Infof("[APPLYING] PR %s/%s#%d '%s', LABELS:", l.Owner(), l.Name(), *pull.Number, safeString(pull.Title), expected)
-		if err := l.AddLabelsToPullRequest(*pull.Number, expected); err != nil {
+		log.Infof("[APPLYING] PR %s/%s#%d '%s', LABELS: %v", l.Owner(), l.Name(), pull.GetNumber(), pull.GetTitle(), expected)
+		if err := l.AddLabelsToPullRequest(pull.GetNumber(), expected); err != nil {
 			return err
 		}
 	}
@@ -87,7 +83,7 @@ func shouldAddLabels(expected []string, existing []*github.Label) bool {
 func difference(expected []string, existing []*github.Label) []string {
 	existingSet := make(map[string]struct{}, len(existing))
 	for _, v := range existing {
-		existingSet[safeString(v.Name)] = struct{}{}
+		existingSet[v.GetName()] = struct{}{}
 	}
 	var diff []string
 	for _, v := range expected {
@@ -96,11 +92,4 @@ func difference(expected []string, existing []*github.Label) []string {
 		}
 	}
 	return diff
-}
-
-func safeString(str *string) string {
-	if str == nil {
-		return ""
-	}
-	return *str
 }
