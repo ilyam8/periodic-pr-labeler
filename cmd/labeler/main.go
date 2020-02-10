@@ -16,7 +16,7 @@ import (
 type options struct {
 	RepoSlug           string `short:"r" long:"repository" description:"github repository slug"`
 	Token              string `short:"t" long:"token" description:"github token"`
-	LabelMappings      string `short:"m" long:"label-mappings" description:"label mappings file on github"`
+	LabelMappings      string `short:"m" long:"label-mappings" description:"label mappings file on github" default:".github/labeler.yml"`
 	LabelMappingsLocal string `short:"M" long:"label-mappings-local" description:"label mappings file on the local system"`
 	DryRun             bool   `short:"d" long:"dry-run" description:"dry run, labels won't be applied, only reported"`
 }
