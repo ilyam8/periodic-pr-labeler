@@ -44,7 +44,7 @@ func (ms Mappings) MatchedLabels(files []*github.CommitFile) (labels []string) {
 	set := make(map[string]bool)
 	for _, file := range files {
 		for _, l := range ms.labels {
-			if !set[l.name] && l.Match(*file.Filename) {
+			if !set[l.name] && file.Filename != nil && l.Match(*file.Filename) {
 				set[l.name] = true
 				labels = append(labels, l.name)
 			}

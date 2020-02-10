@@ -1,151 +1,108 @@
 package labeling
 
 import (
-	"errors"
-	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/google/go-github/v29/github"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+)
+
+const open = "open"
+
+type pullRequest struct {
+	title string
+	state string
+	files []string
+
+	expectedLabels []string
+	*github.PullRequest
+}
+
+var (
+	prModifyAppsPlugin = pullRequest{
+		title: "Modify apps.plugin",
+		state: open,
+		files: []string{"collectors/apps.plugin/apps_plugin.c"},
+	}
+	prModifyPythonExample = pullRequest{
+		title: "Modify python.d example module",
+		state: open,
+		files: []string{"collectors/python.d.plugin/example/example.chart.py"},
+	}
+	prModifyPythonApache = pullRequest{
+		title: "Modify python.d apache module",
+		state: open,
+		files: []string{"collectors/python.d.plugin/apache/apache.chart.py"},
+	}
+	prModifyBashExample = pullRequest{
+		title: "Modify charts.d example module",
+		state: open,
+		files: []string{"collectors/charts.d.plugin/example/example.sh"},
+	}
+	prModifyBashApache = pullRequest{
+		title: "Modify charts.d apache module",
+		state: open,
+		files: []string{"collectors/charts.d.plugin/apache/apache.sh"},
+	}
+	prClosedModifyBashTomcat = pullRequest{
+		title: "Closed modify charts.d tomcat module",
+		files: []string{"collectors/charts.d.plugin/tomcat/tomcat.sh"},
+	}
 )
 
 func TestNew(t *testing.T) {
 
 }
 
+type applyLabelsTestCase struct {
+	pr             pullRequest
+	expectedLabels []string
+}
+
 func TestLabeler_ApplyLabels(t *testing.T) {
+	tests := []applyLabelsTestCase{
+		{pr: prModifyAppsPlugin, expectedLabels: []string{"collectors"}},
+		{pr: prModifyPythonExample, expectedLabels: []string{"collectors", "python.d"}},
+		{pr: prModifyPythonApache, expectedLabels: []string{"collectors", "python.d", "python.d/apache"}},
+		{pr: prModifyBashExample, expectedLabels: []string{"collectors", "charts.d"}},
+		{pr: prModifyBashApache, expectedLabels: []string{"collectors", "charts.d", "charts.d/apache"}},
+		{pr: prClosedModifyBashTomcat},
+	}
+
+	labeler := prepareApplyLabelsLabeler(tests)
+
+	err := labeler.ApplyLabels()
+	require.NoError(t, err)
+
+	for _, test := range tests {
+		diff := difference(test.expectedLabels, test.pr.Labels)
+		assert.Zerof(t, diff, "PR#%d ('%s') has no following labels: %v", *test.pr.Number, *test.pr.Title, diff)
+	}
+}
+
+func prepareApplyLabelsLabeler(cases []applyLabelsTestCase) *Labeler {
 	rs := prepareRepository()
-	ms := &mockMappings{}
+	ms := prepareMappings()
 
-	l := New(rs, ms)
-	_ = l.ApplyLabels()
+	for i, c := range cases {
+		cases[i].pr.expectedLabels = c.expectedLabels
+		pull, files := convertPullRequest(c.pr)
+		cases[i].pr.PullRequest = pull
+		rs.addPullRequest(pull, files)
+	}
+	return New(rs, ms)
 }
 
-type mockMappings struct{}
-
-func (mockMappings) MatchedLabels(files []*github.CommitFile) (labels []string) {
-	set := make(map[string]bool)
-
-	for _, f := range files {
-		switch {
-		case strings.HasPrefix(*f.Filename, "collectors"):
-			set["collectors"] = true
-		}
+func convertPullRequest(pr pullRequest) (*github.PullRequest, []*github.CommitFile) {
+	pull := &github.PullRequest{
+		Title: &pr.title,
+		State: &pr.state,
 	}
-	for v := range set {
-		labels = append(labels, v)
-
-	}
-	return labels
-}
-
-type mockRepository struct {
-	owner                         string
-	name                          string
-	errOnOpenPullRequests         bool
-	errOnPullRequestModifiedFiles bool
-	errOnAddLabelsToPullRequest   bool
-	pulls                         []*github.PullRequest
-	pullsFiles                    map[int][]*github.CommitFile
-}
-
-func (r mockRepository) OpenPullRequests() ([]*github.PullRequest, error) {
-	if r.errOnOpenPullRequests {
-		return nil, errors.New("mock OpenPullRequests error")
-	}
-	var pulls []*github.PullRequest
-	for _, p := range r.pulls {
-		if *p.State == "open" {
-			pulls = append(pulls, p)
-		}
-	}
-	return pulls, nil
-}
-
-func (r mockRepository) PullRequestModifiedFiles(number int) ([]*github.CommitFile, error) {
-	if r.errOnPullRequestModifiedFiles {
-		return nil, errors.New("mock PullRequestModifiedFiles error")
-	}
-	files, ok := r.pullsFiles[number]
-	if !ok {
-		return nil, fmt.Errorf("couldnt find pr#%d commit files", number)
-	}
-	return files, nil
-}
-
-func (r *mockRepository) AddLabelsToPullRequest(prNum int, labels []string) error {
-	if r.errOnAddLabelsToPullRequest {
-		return errors.New("mock AddLabelsToPullRequest error")
-	}
-	pr, err := r.findPullRequest(prNum)
-	if err != nil {
-		return err
-	}
-	diff := difference(labels, pr.Labels)
-	for _, name := range diff {
-		name := name
-		pr.Labels = append(pr.Labels, &github.Label{Name: &name})
-	}
-	return nil
-}
-
-func (r mockRepository) findPullRequest(num int) (*github.PullRequest, error) {
-	for _, p := range r.pulls {
-		if *p.Number == num {
-			return p, nil
-		}
-	}
-	return nil, fmt.Errorf("pull request %d not found", num)
-}
-
-func (r mockRepository) Owner() string {
-	return r.owner
-}
-
-func (r mockRepository) Name() string {
-	return r.name
-}
-
-func prepareRepository() *mockRepository {
-	r := mockRepository{
-		owner:      "owner",
-		name:       "name",
-		pullsFiles: make(map[int][]*github.CommitFile),
-	}
-
-	const open = "open"
-	prData := []struct {
-		title string
-		state string
-		files []string
-	}{
-		{
-			title: "Title",
-			state: open,
-			files: []string{"collectors/charts.d.plugin/charts.d.plugin.in"},
-		},
-	}
-
-	for i, data := range prData {
-		pr, files := preparePullRequestCommitFiles(i, data.title, data.state, data.files...)
-		r.pulls = append(r.pulls, pr)
-		r.pullsFiles[i] = files
-	}
-
-	return &r
-}
-
-func preparePullRequestCommitFiles(number int, title, state string, files ...string) (*github.PullRequest, []*github.CommitFile) {
-	pr := &github.PullRequest{
-		Number: &number,
-		Title:  &title,
-		State:  &state,
-	}
-
 	var cf []*github.CommitFile
-	for _, name := range files {
+	for _, name := range pr.files {
 		name := name
 		cf = append(cf, &github.CommitFile{Filename: &name})
 	}
-	return pr, cf
+	return pull, cf
 }

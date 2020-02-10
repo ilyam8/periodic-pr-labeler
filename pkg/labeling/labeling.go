@@ -30,7 +30,7 @@ func New(r Repository, m Mappings) *Labeler {
 	}
 }
 
-func (l *Labeler) ApplyLabels() error {
+func (l *Labeler) ApplyLabels() (err error) {
 	pulls, err := l.OpenPullRequests()
 	if err != nil {
 		return err
@@ -39,27 +39,33 @@ func (l *Labeler) ApplyLabels() error {
 }
 
 func (l *Labeler) applyLabels(pulls []*github.PullRequest) error {
-	for _, pr := range pulls {
-		expected, err := l.expectedLabels(pr)
+	for _, pull := range pulls {
+		if pull.Number == nil {
+			continue
+		}
+
+		expected, err := l.expectedLabels(pull)
 		if err != nil {
 			return err
 		}
-		if !shouldApplyLabels(expected, pr.Labels) {
+
+		if !shouldApplyLabels(expected, pull.Labels) {
 			continue
 		}
-		log.Infof("PR %s/%s#%d should have following labels: %v (%s)", l.Owner(), l.Name(), *pr.Number, expected, *pr.Title)
+
+		log.Infof("PR %s/%s#%d should have following labels: %v (%s)", l.Owner(), l.Name(), *pull.Number, expected, safeString(pull.Title))
 		if l.DryRun {
 			continue
 		}
-		if err := l.AddLabelsToPullRequest(*pr.Number, expected); err != nil {
+		if err := l.AddLabelsToPullRequest(*pull.Number, expected); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (l *Labeler) expectedLabels(pr *github.PullRequest) ([]string, error) {
-	files, err := l.PullRequestModifiedFiles(*pr.Number)
+func (l *Labeler) expectedLabels(pull *github.PullRequest) ([]string, error) {
+	files, err := l.PullRequestModifiedFiles(*pull.Number)
 	if err != nil {
 		return nil, err
 	}
@@ -73,13 +79,13 @@ func shouldApplyLabels(expected []string, existing []*github.Label) bool {
 	case len(expected) > len(existing):
 		return true
 	}
-	return len(difference(expected, existing)) == 0
+	return len(difference(expected, existing)) > 0
 }
 
 func difference(expected []string, existing []*github.Label) []string {
 	existingSet := make(map[string]struct{}, len(existing))
 	for _, v := range existing {
-		existingSet[*v.Name] = struct{}{}
+		existingSet[safeString(v.Name)] = struct{}{}
 	}
 	var diff []string
 	for _, v := range expected {
@@ -88,4 +94,11 @@ func difference(expected []string, existing []*github.Label) []string {
 		}
 	}
 	return diff
+}
+
+func safeString(str *string) string {
+	if str == nil {
+		return ""
+	}
+	return *str
 }
