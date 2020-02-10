@@ -80,7 +80,7 @@ Help Options:
 
 ## Dry-run mode
 
-Labeler has `dry-run` mode. In this mode **it doesnt add labels** any labels.
+Labeler has `dry-run` mode. In this mode **it doesnt add any labels**.
 
 Reported information:
 
