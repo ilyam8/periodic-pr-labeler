@@ -1,6 +1,8 @@
 package labeling
 
 import (
+	"fmt"
+
 	"github.com/google/go-github/v29/github"
 	log "github.com/sirupsen/logrus"
 )
@@ -48,26 +50,30 @@ func (l Labeler) applyLabels(pulls []*github.PullRequest) error {
 
 		expected := l.MatchedLabels(files)
 		if len(expected) == 0 {
-			log.Debugf("[NO MATCH] PR %s/%s#%d '%s'", l.Owner(), l.Name(), pull.GetNumber(), pull.GetTitle())
+			log.Debugf("[NO MATCH] PR %s'", l.fullName(pull))
 			continue
 		}
 
 		if !shouldAddLabels(expected, pull.Labels) {
-			log.Debugf("[HAVE ALL] PR %s/%s#%d '%s'", l.Owner(), l.Name(), pull.GetNumber(), pull.GetTitle())
+			log.Debugf("[HAVE ALL] PR %s", l.fullName(pull))
 			continue
 		}
 
-		log.Debugf("[SHOULD HAVE] PR %s/%s#%d '%s', LABELS: %v", l.Owner(), l.Name(), pull.GetNumber(), pull.GetTitle(), expected)
+		log.Debugf("[SHOULD HAVE] PR %s, LABELS: %v", l.fullName(pull), expected)
 		if l.DryRun {
 			continue
 		}
 
-		log.Infof("[APPLYING] PR %s/%s#%d '%s', LABELS: %v", l.Owner(), l.Name(), pull.GetNumber(), pull.GetTitle(), expected)
+		log.Infof("[APPLYING] PR %s, LABELS: %v", l.fullName(pull), expected)
 		if err := l.AddLabelsToPullRequest(pull.GetNumber(), expected); err != nil {
 			return err
 		}
 	}
 	return nil
+}
+
+func (l Labeler) fullName(pull *github.PullRequest) string {
+	return fmt.Sprintf("%s/%s#%d '%s'", l.Owner(), l.Name(), pull.GetNumber(), pull.GetTitle())
 }
 
 func shouldAddLabels(expected []string, existing []*github.Label) bool {
