@@ -146,8 +146,12 @@ func TestLabeler_ApplyLabels_ReturnsErrorIfAddLabelsToPullRequestFails(t *testin
 
 func ensurePullRequestsHaveExpectedLabels(t *testing.T, tests []applyLabelsTest) {
 	for _, test := range tests {
-		diff := difference(test.expectedLabels, test.pr.Labels)
-		assert.Zerof(t, diff, "PR#%d ('%s') has no following labels: %v", *test.pr.Number, *test.pr.Title, diff)
+		if len(test.expectedLabels) > 0 {
+			diff := difference(test.expectedLabels, test.pr.Labels)
+			assert.Zerof(t, diff, "PR#%d ('%s') has no following labels: %v", *test.pr.Number, *test.pr.Title, diff)
+		} else {
+			assert.Zerof(t, test.pr.Labels, "PR#%d ('%s') has following labels: %v", *test.pr.Number, *test.pr.Title, test.pr.Labels)
+		}
 	}
 }
 
