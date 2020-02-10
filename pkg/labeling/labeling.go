@@ -59,12 +59,12 @@ func (l Labeler) applyLabels(pulls []*github.PullRequest) error {
 			continue
 		}
 
-		log.WithFields(log.Fields{"labels": expected}).Debugf("%s [dry run]", l.fullName(pull))
+		log.WithField("labels", expected).Debugf("%s [dry run]", l.fullName(pull))
 		if l.DryRun {
 			continue
 		}
 
-		log.WithFields(log.Fields{"labels": expected}).Infof("%s [applying]", l.fullName(pull))
+		log.WithField("labels", expected).Infof("%s [applying]", l.fullName(pull))
 		if err := l.AddLabelsToPullRequest(pull.GetNumber(), expected); err != nil {
 			return err
 		}
