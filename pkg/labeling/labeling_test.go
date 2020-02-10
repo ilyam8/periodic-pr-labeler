@@ -79,6 +79,23 @@ func TestLabeler_ApplyLabels(t *testing.T) {
 	ensurePullRequestsHaveExpectedLabels(t, tests)
 }
 
+func TestLabeler_ApplyLabels_DoesntApplyLabelsInDryRunMode(t *testing.T) {
+	tests := []applyLabelsTest{
+		{pr: prModifyAppsPlugin},
+		{pr: prModifyPythonExample},
+		{pr: prModifyPythonApache},
+		{pr: prModifyBashExample},
+		{pr: prModifyBashApache},
+	}
+
+	labeler, _ := prepareApplyLabelsLabeler(tests)
+	labeler.DryRun = true
+
+	err := labeler.ApplyLabels()
+	require.NoError(t, err)
+	ensurePullRequestsHaveExpectedLabels(t, tests)
+}
+
 func TestLabeler_ApplyLabels_SuccessfulWhenZeroPullRequest(t *testing.T) {
 	labeler, _ := prepareApplyLabelsLabeler(nil)
 
