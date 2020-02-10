@@ -37,7 +37,7 @@ func validateOptions(opts options) error {
 func parseCLI() options {
 	var opts options
 	parser := flags.NewParser(&opts, flags.Default)
-	parser.Name = "periodic-pr-labeler"
+	parser.Name = "labeler"
 	parser.Usage = "[OPTION]..."
 
 	if _, err := parser.ParseArgs(os.Args); err != nil {

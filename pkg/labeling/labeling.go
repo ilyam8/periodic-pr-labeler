@@ -55,7 +55,7 @@ func (l Labeler) applyLabels(pulls []*github.PullRequest) error {
 		}
 
 		if !shouldAddLabels(expected, pull.Labels) {
-			log.WithField("labels", "have all").Debug(l.fullName(pull))
+			log.WithField("labels", "has all").Debug(l.fullName(pull))
 			continue
 		}
 
