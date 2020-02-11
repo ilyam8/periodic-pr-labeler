@@ -1,6 +1,5 @@
 # Periodic Pull Requests Labeler
 
-
 A GitHub action to automatically label all PRs **based on changed files** according to file patterns.
 
 ## Usage
