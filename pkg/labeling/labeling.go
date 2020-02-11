@@ -50,7 +50,7 @@ func (l Labeler) applyLabels(pulls []*github.PullRequest) error {
 
 		expected := l.MatchedLabels(files)
 		if len(expected) == 0 {
-			log.WithField("labels", "no match").Debug(l.fullName(pull))
+			log.WithField("labels", "no match").Info(l.fullName(pull))
 			continue
 		}
 
