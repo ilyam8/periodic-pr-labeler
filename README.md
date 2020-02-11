@@ -1,6 +1,5 @@
 # Periodic Pull Requests Labeler
 
-
 A GitHub action to automatically label all PRs **based on changed files** according to file patterns.
 
 ## Usage
@@ -19,7 +18,7 @@ jobs:
   labeler:
     runs-on: ubuntu-latest
     steps:
-      - uses: docker://docker.pkg.github.com/ilyam8/periodic-pr-labeler/periodic-pr-labeler:master
+      - uses: docker://docker://docker.io/ilyam8/periodic-pr-labeler:latest
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
