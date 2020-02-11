@@ -4,18 +4,18 @@
 
 A GitHub action to automatically label all PRs **based on changed files** according to file patterns.
 
-## Usage
-
 Action is meant to be run as periodic job. This is needed to workaround issues regarding
 [lack of write access when executed from fork](https://help.github.com/en/actions/automating-your-workflow-with-github-actions/authenticating-with-the-github_token#permissions-for-the-github_token)
 which is a common problem when using https://github.com/actions/labeler.
+
+## Workflow
 
 ```yaml
 ---
 name: Pull Request Labeler
 on:
   schedule:
-    - cron: '*/5 * * * *'
+    - cron: '*/10 * * * *'
 jobs:
   labeler:
     runs-on: ubuntu-latest
@@ -27,10 +27,30 @@ jobs:
           LABEL_MAPPINGS_FILE: .github/labeler.yml
 ```
 
-By default action uses `.github/labeler.yml` located in repository from `GITHUB_REPOSITORY` as a source of pattern matchers.
-This file uses the same schema as in https://github.com/actions/labeler
+## Label mapping file
 
-## File patterns
+You need to create a label mappings file with a list of labels and patterns to match to apply the label.
+By default this action uses `.github/labeler.yml` located in repository from `GITHUB_REPOSITORY` as a source of pattern matchers.
+
+```yaml
+# Add 'label1' to any changes within 'example' folder or any subfolders
+label1:
+  - example/**/*
+
+# Add 'label2' to any file changes within 'example2' folder
+label2: example2/*
+
+# Add 'label3' label to any change to *.spec.js files within the source dir
+label3:
+  - src/**/*.spec.js
+
+# Add 'label4' label to any change within the 'core' package
+label4:
+  - package/core/*
+  - package/core/**/*
+```
+
+## Pattern syntax
 
 This action uses [`gobwas/glob`](https://github.com/gobwas/glob) library for pattern matches.
 
