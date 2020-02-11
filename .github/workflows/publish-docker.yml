@@ -6,13 +6,10 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v2
-      - name: Login to Docker Hub
-        run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }} docker.io
       - name: Publish Image
         uses: elgohr/Publish-Docker-Github-Action@master
         with:
           name: ${{ github.repository }}/periodic-pr-labeler:master
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
-      - name: Logout from Docker Hub
-        run: docker logout
+          tags: "latest"
