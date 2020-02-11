@@ -12,4 +12,4 @@ jobs:
           name: ${{ github.repository }}/periodic-pr-labeler:master
           username: $GITHUB_ACTOR
           password: ${{ secrets.GITHUB_TOKEN }}
-          registry: docker.pkg.github.com
+          registry: registry.hub.docker.com
