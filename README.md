@@ -29,7 +29,7 @@ jobs:
 
 ## Label mappings file
 
-You need to create a label mappings file with a list of labels and patterns to match to apply the label.
+This file is in [`YaML`](https://yaml.org/) format. It contains a list of labels and patterns to match to apply the label.
 By default this action uses `.github/labeler.yml` located in repository from `GITHUB_REPOSITORY` as a source of pattern matchers.
 
 ```yaml
