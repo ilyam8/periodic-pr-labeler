@@ -18,7 +18,7 @@ jobs:
   labeler:
     runs-on: ubuntu-latest
     steps:
-      - uses: docker://docker://docker.io/ilyam8/periodic-pr-labeler:latest
+      - uses: docker://docker.io/ilyam8/periodic-pr-labeler:latest
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
