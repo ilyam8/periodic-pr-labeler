@@ -93,6 +93,9 @@ func TestMappings_MatchedLabels(t *testing.T) {
 		{
 			input: []string{"packaging/installer/installer.sh"},
 		},
+		{
+			input: []string{"collectors/README.md"},
+		},
 	}
 
 	ms := prepareValidConfigurationMappings(t)

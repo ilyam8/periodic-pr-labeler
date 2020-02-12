@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"sort"
 
 	"gopkg.in/yaml.v2"
 )
@@ -41,6 +42,7 @@ func parseLabel(name string, value interface{}) (*label, error) {
 	if err != nil {
 		return nil, fmt.Errorf("mapping label '%s': %v", name, err)
 	}
+	placeNegativeFirst(ps)
 	return &label{name: name, patterns: ps}, nil
 }
 
@@ -94,4 +96,8 @@ func removeEmpty(values []string) []string {
 		}
 	}
 	return values[:i]
+}
+
+func placeNegativeFirst(ps patterns) {
+	sort.Slice(ps, func(i, j int) bool { return !ps[i].positive && ps[j].positive })
 }

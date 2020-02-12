@@ -33,8 +33,9 @@ func TestParse(t *testing.T) {
 				{positive: true, raw: "build/**/*", Glob: globMust("build/**/*")},
 			}},
 			{name: "collectors", patterns: patterns{
-				{positive: true, raw: "collectors/*", Glob: globMust("collectors/*")},
 				{positive: false, raw: "collectors/apps.plugin/*", Glob: globMust("collectors/apps.plugin/*")},
+				{positive: false, raw: "collectors/README.md", Glob: globMust("collectors/README.md")},
+				{positive: true, raw: "collectors/*", Glob: globMust("collectors/*")},
 				{positive: true, raw: "collectors/**/*", Glob: globMust("collectors/**/*")},
 			}},
 			{name: "github", patterns: patterns{
