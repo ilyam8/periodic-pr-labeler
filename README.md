@@ -54,10 +54,10 @@ label4:
 Pattern can be negated to stop searching through the remaining patterns. 
 To exclude path from searching prepend pattern with `!`.
 
-Using pattern exclusion keep in mind:
+Using path exclusion keep in mind:
 
-- exclude pattern must be quoted.
-- order is not relevant. Add label conditions: **match at least one positive pattern, do not match any of negated patterns.**
+- negated pattern must be quoted.
+- order is not relevant. Add label condition: **match at least one positive pattern AND do not match any of negated patterns.**
 
 ```yaml
 # Add 'label5' to any changes within 'package' folder or any subfolders except `core` and `installer` subfolders
