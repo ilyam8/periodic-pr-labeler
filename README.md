@@ -50,6 +50,19 @@ label4:
   - package/core/**/*
 ```
 
+## Path exclusion
+
+To exclude path from match just prepend pattern with `!`. **Exclude pattern must be quoted**.
+
+```yaml
+# Add 'label5' to any changes within 'package' folder or any subfolders except `core` and `installer` subfolders
+label5:
+  - "!package/core/*"
+  - "!package/installer/*"
+  - package/*
+  - package/**/*
+```
+
 ## Pattern syntax
 
 This action uses [`gobwas/glob`](https://github.com/gobwas/glob) library for pattern matches.
@@ -90,11 +103,11 @@ Usage:
   labeler [OPTION]...
 
 Application Options:
-  -r, --repository=           github repository slug
-  -t, --token=                github token
-  -m, --label-mappings=       label mappings file on github (default: .github/labeler.yml)
-  -M, --label-mappings-local= label mappings file on the local system
-  -d, --dry-run               dry run, labels won't be applied, only reported
+  -r, --repository=           Github repository slug
+  -t, --token=                GitHub token
+  -m, --label-mappings=       Label mappings file on github (default: .github/labeler.yml)
+  -M, --label-mappings-local= Label mappings file on the local system
+  -d, --dry-run               Dry run, labels won't be applied, only reported
 
 Help Options:
   -h, --help                  Show this help message
