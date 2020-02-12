@@ -11,7 +11,6 @@ which is a common problem when using https://github.com/actions/labeler.
 ## Workflow
 
 ```yaml
----
 name: Pull Request Labeler
 on:
   schedule:
@@ -52,16 +51,21 @@ label4:
 
 ## Path exclusion
 
-Paths can be negated to stop searching through the remaining patterns. 
-To exclude path from searching prepend pattern with `!`. **Exclude pattern must be quoted**.
+Pattern can be negated to stop searching through the remaining patterns. 
+To exclude path from searching prepend pattern with `!`.
+
+Using pattern exclusion keep in mind:
+
+- exclude pattern must be quoted.
+- order is not relevant. Add label conditions: **match at least one positive pattern, do not match any of negated patterns.**
 
 ```yaml
 # Add 'label5' to any changes within 'package' folder or any subfolders except `core` and `installer` subfolders
 label5:
-  - "!package/core/*"
-  - "!package/installer/*"
   - package/*
   - package/**/*
+  - "!package/core/*"
+  - "!package/installer/*"
 ```
 
 ## Pattern syntax

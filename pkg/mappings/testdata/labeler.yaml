@@ -18,4 +18,5 @@ collectors:
   - collectors/*
   - '! collectors/apps.plugin/*'
   - !collectors/cgroups.plugin/*  # skipped (https://yaml.org/spec/1.2/spec.html#id2784064)
+  - '!collectors/README.md'
   - collectors/**/*
