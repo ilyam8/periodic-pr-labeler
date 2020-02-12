@@ -62,10 +62,10 @@ Using pattern exclusion keep in mind:
 ```yaml
 # Add 'label5' to any changes within 'package' folder or any subfolders except `core` and `installer` subfolders
 label5:
-  - "!package/core/*"
-  - "!package/installer/*"
   - package/*
   - package/**/*
+  - "!package/core/*"
+  - "!package/installer/*"
 ```
 
 ## Pattern syntax
