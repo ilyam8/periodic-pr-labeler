@@ -97,9 +97,7 @@ func newMappingsService(opts options, rs *repository.Repository) (ms *mappings.M
 
 func newLabelingService(rs *repository.Repository, ms *mappings.Mappings, opts options) *labeling.Labeler {
 	labSvc := labeling.New(rs, ms)
-	if opts.DryRun {
-		labSvc.DryRun = true
-	}
+	labSvc.DryRun = opts.DryRun
 	return labSvc
 }
 

@@ -37,9 +37,8 @@ func newPatterns(values []string) (patterns, error) {
 }
 
 func newPattern(value string) (*pattern, error) {
-	positive := true
-	if value[0] == '!' && len(value) > 1 {
-		positive = false
+	positive := !(value[0] == '!' && len(value) > 1)
+	if !positive {
 		value = value[1:]
 	}
 	value = strings.TrimSpace(value)
