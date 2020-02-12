@@ -1,8 +1,9 @@
 package mappings
 
 import (
-	"github.com/google/go-github/v29/github"
 	"io/ioutil"
+
+	"github.com/google/go-github/v29/github"
 )
 
 type (
