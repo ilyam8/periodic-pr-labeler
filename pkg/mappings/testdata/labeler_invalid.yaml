@@ -8,14 +8,15 @@
 # with a character that is part of the standard YAML syntax must be
 # quoted.
 
-area/57:
-  - .navarro/*
-  - .navarro/**/*
+github:
+  - .github/*
+  - .github/**/*
 
-area/58: arroyo/**/*
+build: build/**/*
 
-area/59:
-  - newreno/*
-  - newreno/eastside/*
+collectors:
+  - collectors/*
+  - '!collectors/apps.plugin/*'
+  - collectors/**/*
 
-area/0:
+web:

@@ -33,15 +33,15 @@ func parseLabel(name string, value interface{}) (*label, error) {
 	if err != nil {
 		return nil, fmt.Errorf("mapping label '%s': %v", name, err)
 	}
-	if len(values) == 0 {
+	if values = removeEmpty(values); len(values) == 0 {
 		return nil, fmt.Errorf("mapping label '%s' has no pattern(s)", name)
 	}
 
-	m, err := newGlobOrMatcher(values)
+	ps, err := newPatterns(values)
 	if err != nil {
 		return nil, fmt.Errorf("mapping label '%s': %v", name, err)
 	}
-	return &label{name: name, matcher: m}, nil
+	return &label{name: name, patterns: ps}, nil
 }
 
 func mappingToSlice(mapping interface{}) ([]string, error) {
@@ -83,4 +83,15 @@ func convertSlice(rv *[]string, value reflect.Value) error {
 		}
 	}
 	return nil
+}
+
+func removeEmpty(values []string) []string {
+	var i int
+	for _, v := range values {
+		if v != "" {
+			values[i] = v
+			i++
+		}
+	}
+	return values[:i]
 }

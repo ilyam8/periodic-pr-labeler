@@ -7,12 +7,9 @@ import (
 )
 
 type (
-	matcher interface {
-		Match(string) bool
-	}
 	label struct {
 		name string
-		matcher
+		patterns
 	}
 	Mappings struct {
 		labels []*label
@@ -44,7 +41,7 @@ func (ms Mappings) MatchedLabels(files []*github.CommitFile) (labels []string) {
 	set := make(map[string]bool)
 	for _, file := range files {
 		for _, l := range ms.labels {
-			if !set[l.name] && l.Match(file.GetFilename()) {
+			if !set[l.name] && l.match(file.GetFilename()) {
 				set[l.name] = true
 				labels = append(labels, l.name)
 			}

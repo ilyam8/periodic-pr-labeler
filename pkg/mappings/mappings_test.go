@@ -69,37 +69,36 @@ func TestMappings_MatchedLabels(t *testing.T) {
 		wantLabels []string
 	}{
 		{
-			input:      []string{".navarro/vertibird.plans"},
-			wantLabels: []string{"area/57"},
+			input:      []string{".github/stale.yml"},
+			wantLabels: []string{"github"},
 		},
 		{
-			input:      []string{".navarro/main_base/power.armor"},
-			wantLabels: []string{"area/57"},
+			input:      []string{".github/workflow/labeler.yml"},
+			wantLabels: []string{"github"},
 		},
 		{
-			input:      []string{"arroyo/temple/test.room"},
-			wantLabels: []string{"area/58"},
+			input:      []string{"build/m4/tmalloc.m4"},
+			wantLabels: []string{"build"},
 		},
 		{
-			input:      []string{"newreno/jungle.gym"},
-			wantLabels: []string{"area/59"},
+			input:      []string{".github/stale.yml", "build/m4/tmalloc.m4", "collectors/python.d.plugin/example/example.chart.py"},
+			wantLabels: []string{"github", "build", "collectors"},
 		},
 		{
-			input:      []string{".navarro/vertibird.plans", "arroyo/temple/test.room", "newreno/jungle.gym"},
-			wantLabels: []string{"area/57", "area/58", "area/59"},
+			input: []string{"build/build.sh"},
 		},
 		{
-			input: []string{"newreno/westside/drunk.chapel"},
+			input: []string{"collectors/apps.plugin/apps_plugins.c"},
 		},
 		{
-			input: []string{"brokenhils/down.town"},
+			input: []string{"packaging/installer/installer.sh"},
 		},
 	}
 
 	ms := prepareValidConfigurationMappings(t)
 
 	for i, test := range tests {
-		t.Run(fmt.Sprintf("test case #%d", i+1), func(t *testing.T) {
+		t.Run(fmt.Sprintf("test case #%d (%v)", i+1, test.input), func(t *testing.T) {
 			files := prepareGithubCommitFiles(test.input)
 			assert.Equal(t, test.wantLabels, ms.MatchedLabels(files))
 		})

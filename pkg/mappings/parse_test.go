@@ -2,8 +2,10 @@ package mappings
 
 import (
 	"io/ioutil"
+	"sort"
 	"testing"
 
+	"github.com/gobwas/glob"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -23,10 +25,23 @@ func TestParse_testdata(t *testing.T) {
 func TestParse(t *testing.T) {
 	tests := map[string]struct {
 		input      []byte
-		wantLabels map[string]int
+		wantLabels []*label
 		wantErr    bool
 	}{
-		"valid configuration":   {input: validConfig, wantLabels: map[string]int{"area/57": 2, "area/58": 1, "area/59": 2}},
+		"valid configuration": {input: validConfig, wantLabels: []*label{
+			{name: "build", patterns: patterns{
+				{positive: true, raw: "build/**/*", Glob: globMust("build/**/*")},
+			}},
+			{name: "collectors", patterns: patterns{
+				{positive: true, raw: "collectors/*", Glob: globMust("collectors/*")},
+				{positive: false, raw: "collectors/apps.plugin/*", Glob: globMust("collectors/apps.plugin/*")},
+				{positive: true, raw: "collectors/**/*", Glob: globMust("collectors/**/*")},
+			}},
+			{name: "github", patterns: patterns{
+				{positive: true, raw: ".github/*", Glob: globMust(".github/*")},
+				{positive: true, raw: ".github/**/*", Glob: globMust(".github/**/*")},
+			}},
+		}},
 		"invalid configuration": {input: invalidConfig, wantErr: true},
 		"empty configuration":   {input: emptyConfig, wantErr: true},
 	}
@@ -38,18 +53,17 @@ func TestParse(t *testing.T) {
 			if !test.wantErr {
 				require.NotNil(t, ms)
 				require.NoError(t, err)
-				assert.Lenf(t, ms.labels, len(test.wantLabels), "mappings has %d labels, but expected %d", len(ms.labels), len(test.wantLabels))
-				for _, l := range ms.labels {
-					num, ok := test.wantLabels[l.name]
-					assert.Truef(t, ok, "label '%s' not in mappings", l.name)
-					v, ok := l.matcher.(globOrMatcher)
-					require.Truef(t, ok, "label '%s' not globOrMatcher", l.name)
-					assert.Lenf(t, v, num, "label '%s' has %d matchers, but expected %d", l.name, len(v), num)
-				}
+
+				sort.Slice(ms.labels, func(i, j int) bool { return ms.labels[i].name < ms.labels[j].name })
+				assert.Equal(t, test.wantLabels, ms.labels)
 			} else {
 				assert.Nil(t, ms)
 				assert.Error(t, err)
 			}
 		})
 	}
+}
+
+func globMust(pattern string) glob.Glob {
+	return glob.MustCompile(pattern, '/')
 }
