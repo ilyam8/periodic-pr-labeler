@@ -52,7 +52,8 @@ label4:
 
 ## Path exclusion
 
-To exclude path from match just prepend pattern with `!`. **Exclude pattern must be quoted**.
+Paths can be negated to stop searching through the remaining patterns. 
+To exclude path from searching prepend pattern with `!`. **Exclude pattern must be quoted**.
 
 ```yaml
 # Add 'label5' to any changes within 'package' folder or any subfolders except `core` and `installer` subfolders
