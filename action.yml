@@ -5,7 +5,7 @@ description: 'Periodically label all PRs based on changed files according to fil
 author: Ilya Mashchenko (ilyam8)
 runs:
   using: 'docker'
-  image: 'ilyam8/periodic-pr-labeler/periodic-pr-labeler@master'
+  image: 'Dockerfile'
 branding:
   icon: "tag"
   color: "yellow"
