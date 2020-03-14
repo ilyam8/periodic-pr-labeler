@@ -1,6 +1,5 @@
 FROM golang:alpine as builder
 
-RUN mkdir -p /workspace
 WORKDIR /workspace
 COPY . .
 
