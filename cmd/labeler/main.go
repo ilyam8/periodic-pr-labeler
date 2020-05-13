@@ -16,7 +16,7 @@ import (
 type options struct {
 	RepoSlug           string `short:"r" long:"repository" description:"GitHub repository slug"`
 	Token              string `short:"t" long:"token" description:"GitHub token"`
-	LabelMappings      string `short:"m" long:"label-mappings" description:"Label mappings file on github" default:".github/labeler.yml"`
+	LabelMappings      string `short:"m" long:"label-mappings" description:"Label mappings file on github"`
 	LabelMappingsLocal string `short:"M" long:"label-mappings-local" description:"Label mappings file on the local system"`
 	DryRun             bool   `short:"d" long:"dry-run" description:"Dry run, labels won't be applied, only reported"`
 }
@@ -104,6 +104,9 @@ func newLabelingService(rs *repository.Repository, ms *mappings.Mappings, opts o
 func main() {
 	opts := parseCLI()
 	applyFromEnv(&opts)
+	if opts.LabelMappings == "" {
+		opts.LabelMappings = ".github/labeler.yml"
+	}
 
 	if err := validateOptions(opts); err != nil {
 		log.Fatal(err)
