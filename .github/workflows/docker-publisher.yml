@@ -1,19 +1,34 @@
 name: Publish Docker
-env: 
+env:
   DOCKER_REPO: "ilyam8/periodic-pr-labeler"
 on:
+  release:
+    types: [published]
   push:
     branches:
       - master
 jobs:
   build:
     runs-on: ubuntu-latest
+    if: >
+      github.event_name == 'push' &&
+      (github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/')) &&
+      github.repository == 'ilyam8/periodic-pr-labeler'
     steps:
-    - name: Checkout
-      uses: actions/checkout@master
-    - name: Publish to Registry
-      uses: elgohr/Publish-Docker-Github-Action@master
-      with:
-        name: ${{ env.DOCKER_REPO }}
-        username: ${{ secrets.DOCKER_USERNAME }}
-        password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Checkout
+        uses: actions/checkout@master
+      - name: Set up image tag
+        run: |
+          set -vx
+          if echo "$GITHUB_REF" | grep -q '^refs/heads/'; then
+            echo "::set-env name=TAG::latest"
+          elif echo "$GITHUB_REF" | grep -q '^refs/tags/'; then
+            echo "::set-env name=TAG::${GITHUB_REF/refs\/tags\//}"
+          fi
+      - name: Publish to Registry
+        uses: elgohr/Publish-Docker-Github-Action@master
+        with:
+          name: ${{ env.DOCKER_REPO }}
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          tags: "${{ env.TAG }}"
