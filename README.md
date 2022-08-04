@@ -1,7 +1,5 @@
 # Periodic Pull Requests Labeler
 
-[![CircleCI](https://circleci.com/gh/ilyam8/periodic-pr-labeler.svg?style=svg)](https://circleci.com/gh/ilyam8/periodic-pr-labeler)
-
 A GitHub action to automatically label all PRs **based on changed files** according to file patterns.
 
 Action is meant to be run as periodic job. This is needed to workaround issues regarding
@@ -28,8 +26,10 @@ jobs:
 
 ## Label mappings file
 
-This file is in [`YaML`](https://yaml.org/) format. It contains a list of labels and patterns to match to apply the label.
-By default this action uses `.github/labeler.yml` located in repository from `GITHUB_REPOSITORY` as a source of pattern matchers.
+This file is in [`YaML`](https://yaml.org/) format. It contains a list of labels and patterns to match to apply the
+label.
+By default, this action uses `.github/labeler.yml` located in repository from `GITHUB_REPOSITORY` as a source of pattern
+matchers.
 
 ```yaml
 # Add 'label1' to any changes within 'example' folder or any subfolders
@@ -51,13 +51,14 @@ label4:
 
 ## Path exclusion
 
-Pattern can be negated to stop searching through the remaining patterns. 
+Pattern can be negated to stop searching through the remaining patterns.
 To exclude path from searching prepend pattern with `!`.
 
 Using path exclusion keep in mind:
 
 - negated pattern must be quoted.
-- order is not relevant. Add label condition: **match at least one positive pattern AND do not match any of negated patterns.**
+- order is not relevant. Add label condition: **match at least one positive pattern AND do not match any of negated
+  patterns.**
 
 ```yaml
 # Add 'label5' to any changes within 'package' folder or any subfolders except `core` and `installer` subfolders
@@ -120,11 +121,11 @@ Help Options:
 
 ## Dry-run mode
 
-Labeler has `dry-run` mode. In this mode **it doesnt add any labels**.
+Labeler has `dry-run` mode. In this mode **it doesn't add any labels**.
 
 Reported information:
 
-- `no match` means all changed files dont match any pattern.
+- `no match` means all changed files don't match any pattern.
 - `has all` means that pull request has all expected labels.
 - `list of labels` means that pull request has no expected labels. List of labels to add.
 
