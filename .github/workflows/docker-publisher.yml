@@ -1,6 +1,7 @@
 name: Publish Docker
 env:
   DOCKER_REPO: "ilyam8/periodic-pr-labeler"
+  ACTIONS_ALLOW_UNSECURE_COMMANDS: true
 on:
   release:
     types: [published]
