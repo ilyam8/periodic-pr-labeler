@@ -16,7 +16,7 @@ jobs:
       github.repository == 'ilyam8/periodic-pr-labeler'
     steps:
       - name: Checkout
-        uses: actions/checkout@master
+        uses: actions/checkout@v3
       - name: Set up image tag
         run: |
           set -vx
@@ -26,7 +26,7 @@ jobs:
             echo "::set-env name=TAG::${GITHUB_REF/refs\/tags\//}"
           fi
       - name: Publish to Registry
-        uses: elgohr/Publish-Docker-Github-Action@master
+        uses: elgohr/Publish-Docker-Github-Action@v4
         with:
           name: ${{ env.DOCKER_REPO }}
           username: ${{ secrets.DOCKER_USERNAME }}
