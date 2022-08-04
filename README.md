@@ -1,7 +1,5 @@
 # Periodic Pull Requests Labeler
 
-[![CircleCI](https://circleci.com/gh/ilyam8/periodic-pr-labeler.svg?style=svg)](https://circleci.com/gh/ilyam8/periodic-pr-labeler)
-
 A GitHub action to automatically label all PRs **based on changed files** according to file patterns.
 
 Action is meant to be run as periodic job. This is needed to workaround issues regarding
