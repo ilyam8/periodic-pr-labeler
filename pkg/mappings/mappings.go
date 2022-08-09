@@ -1,9 +1,9 @@
 package mappings
 
 import (
-	"io/ioutil"
+	"os"
 
-	"github.com/google/go-github/v29/github"
+	"github.com/google/go-github/v45/github"
 )
 
 type (
@@ -21,7 +21,7 @@ type Repository interface {
 }
 
 func FromFile(filepath string) (*Mappings, error) {
-	b, err := ioutil.ReadFile(filepath)
+	b, err := os.ReadFile(filepath)
 	if err != nil {
 		return nil, err
 	}

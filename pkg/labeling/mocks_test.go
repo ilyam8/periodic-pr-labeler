@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/google/go-github/v29/github"
+	"github.com/google/go-github/v45/github"
 )
 
 func prepareRepository() *mockRepository {
@@ -26,15 +26,15 @@ type mockRepository struct {
 	pullsFiles                    map[int][]*github.CommitFile
 }
 
-func (r mockRepository) Owner() string {
+func (r *mockRepository) Owner() string {
 	return r.owner
 }
 
-func (r mockRepository) Name() string {
+func (r *mockRepository) Name() string {
 	return r.name
 }
 
-func (r mockRepository) OpenPullRequests() ([]*github.PullRequest, error) {
+func (r *mockRepository) OpenPullRequests() ([]*github.PullRequest, error) {
 	if r.errOnOpenPullRequests {
 		return nil, errors.New("mock OpenPullRequests error")
 	}
@@ -47,7 +47,7 @@ func (r mockRepository) OpenPullRequests() ([]*github.PullRequest, error) {
 	return pulls, nil
 }
 
-func (r mockRepository) PullRequestModifiedFiles(number int) ([]*github.CommitFile, error) {
+func (r *mockRepository) PullRequestModifiedFiles(number int) ([]*github.CommitFile, error) {
 	if r.errOnPullRequestModifiedFiles {
 		return nil, errors.New("mock PullRequestModifiedFiles error")
 	}
@@ -74,7 +74,7 @@ func (r *mockRepository) AddLabelsToPullRequest(prNum int, labels []string) erro
 	return nil
 }
 
-func (r mockRepository) findPullRequest(num int) (*github.PullRequest, error) {
+func (r *mockRepository) findPullRequest(num int) (*github.PullRequest, error) {
 	for _, p := range r.pulls {
 		if *p.Number == num {
 			return p, nil

@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/google/go-github/v29/github"
+	"github.com/google/go-github/v45/github"
 	"golang.org/x/oauth2"
 )
 
@@ -30,14 +30,14 @@ type Config struct {
 	Token string
 }
 
-// Repository represents github repository.
+// Repository represents GitHub repository.
 type Repository struct {
 	owner string
 	name  string
 	*github.Client
 }
 
-// Name is repository owner.
+// Owner is repository owner.
 func (r Repository) Owner() string {
 	return r.owner
 }
@@ -47,7 +47,7 @@ func (r Repository) Name() string {
 	return r.name
 }
 
-// FileContent returns content of a single file. If filepath doesnt reference to a file it returns nil.
+// FileContent returns content of a single file. If filepath doesn't reference to a file it returns nil.
 func (r Repository) FileContent(filepath string) (*github.RepositoryContent, error) {
 	content, _, _, err := r.Repositories.GetContents(context.TODO(), r.Owner(), r.Name(), filepath, nil)
 	if content == nil && err == nil {

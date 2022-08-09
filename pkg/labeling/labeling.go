@@ -3,7 +3,7 @@ package labeling
 import (
 	"fmt"
 
-	"github.com/google/go-github/v29/github"
+	"github.com/google/go-github/v45/github"
 	log "github.com/sirupsen/logrus"
 )
 
