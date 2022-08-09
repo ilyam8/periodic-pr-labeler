@@ -1,7 +1,7 @@
 package mappings
 
 import (
-	"io/ioutil"
+	"os"
 	"sort"
 	"testing"
 
@@ -11,9 +11,9 @@ import (
 )
 
 var (
-	validConfig, _   = ioutil.ReadFile("testdata/labeler.yaml")
-	emptyConfig, _   = ioutil.ReadFile("testdata/labeler_empty.yaml")
-	invalidConfig, _ = ioutil.ReadFile("testdata/labeler_invalid.yaml")
+	validConfig, _   = os.ReadFile("testdata/labeler.yaml")
+	emptyConfig, _   = os.ReadFile("testdata/labeler_empty.yaml")
+	invalidConfig, _ = os.ReadFile("testdata/labeler_invalid.yaml")
 )
 
 func TestParse_testdata(t *testing.T) {
