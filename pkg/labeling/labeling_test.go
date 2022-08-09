@@ -3,7 +3,7 @@ package labeling
 import (
 	"testing"
 
-	"github.com/google/go-github/v29/github"
+	"github.com/google/go-github/v45/github"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

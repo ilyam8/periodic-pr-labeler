@@ -3,7 +3,7 @@ package mappings
 import (
 	"io/ioutil"
 
-	"github.com/google/go-github/v29/github"
+	"github.com/google/go-github/v45/github"
 )
 
 type (

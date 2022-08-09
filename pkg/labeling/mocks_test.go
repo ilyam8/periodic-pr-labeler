@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/google/go-github/v29/github"
+	"github.com/google/go-github/v45/github"
 )
 
 func prepareRepository() *mockRepository {
