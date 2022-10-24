@@ -7,7 +7,7 @@ require (
 	github.com/google/go-github/v45 v45.2.0
 	github.com/jessevdk/go-flags v1.5.0
 	github.com/sirupsen/logrus v1.9.0
-	github.com/stretchr/testify v1.8.0
+	github.com/stretchr/testify v1.8.1
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 	gopkg.in/yaml.v2 v2.4.0
 )
