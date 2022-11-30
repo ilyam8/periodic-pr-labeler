@@ -22,9 +22,9 @@ jobs:
         run: |
           set -vx
           if echo "$GITHUB_REF" | grep -q '^refs/heads/'; then
-            echo "::set-env name=TAG::latest"
+            echo "TAG=latest" >> $GITHUB_ENV
           elif echo "$GITHUB_REF" | grep -q '^refs/tags/'; then
-            echo "::set-env name=TAG::${GITHUB_REF/refs\/tags\//}"
+            echo "TAG=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_ENV
           fi
       - name: Publish to Registry
         uses: elgohr/Publish-Docker-Github-Action@v4
