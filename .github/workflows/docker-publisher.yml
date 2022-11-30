@@ -27,7 +27,7 @@ jobs:
             echo "TAG=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_ENV
           fi
       - name: Publish to Registry
-        uses: elgohr/Publish-Docker-Github-Action@v4
+        uses: elgohr/Publish-Docker-Github-Action@v5
         with:
           name: ${{ env.DOCKER_REPO }}
           username: ${{ secrets.DOCKER_USERNAME }}
