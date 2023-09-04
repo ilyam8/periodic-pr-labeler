@@ -17,7 +17,7 @@ jobs:
       github.repository == 'ilyam8/periodic-pr-labeler'
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Set up image tag
         run: |
           set -vx
