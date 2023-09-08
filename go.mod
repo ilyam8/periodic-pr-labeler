@@ -1,6 +1,6 @@
 module github.com/ilyam8/periodic-pr-labeler
 
-go 1.20
+go 1.21.1
 
 require (
 	github.com/gobwas/glob v0.2.3
